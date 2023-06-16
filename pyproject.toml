@@ -11,6 +11,8 @@ python = "^3.10"
 pydantic = "^1.10.9"
 more-itertools = "^9.1.0"
 
+[tool.poetry.scripts]
+pily = "pily.__main__:main"
 
 [tool.poetry.group.dev.dependencies]
 mypy = "^1.3.0"
