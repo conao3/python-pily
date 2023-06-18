@@ -2,20 +2,27 @@ from typing import Optional
 
 import more_itertools
 
+from . import types
 from . import reader
 
 
-def read(arg: str) -> str:
+def read(arg: str) -> Optional[types.Value]:
     reader_ = reader.Reader(more_itertools.peekable(arg))
-    return str(reader_.read())
+    return reader_.read()
 
 
-def eval(arg: str) -> str:
-    return arg
+def eval(arg: Optional[types.Value]) -> Optional[types.Value]:
+    if arg:
+        return arg
+
+    return None
 
 
-def print(arg: str) -> str:
-    return arg
+def print(arg: Optional[types.Value]) -> Optional[str]:
+    if arg:
+        return str(arg)
+
+    return None
 
 
 def rep(arg: str) -> Optional[str]:
