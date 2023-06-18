@@ -25,8 +25,17 @@ class Value(pydantic.BaseModel):
     pass
 
 
+class ValueCons(Value):
+    car: Value
+    cdr: Value
+
+
 class ValueAtom(Value):
-    value: str
+    pass
+
+
+class ValueSymbol(ValueAtom):
+    name: str
 
 
 ## Cache

@@ -18,8 +18,8 @@ class Reader:
 
             self.consume()
 
-    def read_atom(self) -> types.ValueAtom:
-        return types.ValueAtom(value=self.consume())
+    def read_atom(self) -> types.Value:
+        return types.ValueSymbol(name=self.consume())
 
     def read(self) -> Optional[types.Value]:
         self.consume_space()
