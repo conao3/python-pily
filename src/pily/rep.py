@@ -7,8 +7,8 @@ from . import reader
 
 
 def read(arg: str) -> Optional[types.Value]:
-    reader_ = reader.Reader(more_itertools.peekable(arg))
-    return reader_.read()
+    chars = more_itertools.peekable(arg)
+    return reader.read(chars)
 
 
 def eval(arg: Optional[types.Value]) -> Optional[types.Value]:

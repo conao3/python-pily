@@ -7,11 +7,7 @@ class PilyError(Exception):
     pass
 
 
-class LexerError(PilyError):
-    pass
-
-
-class ParserError(PilyError):
+class ReaderError(PilyError):
     pass
 
 
