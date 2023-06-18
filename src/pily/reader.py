@@ -6,7 +6,7 @@ from . import types
 from . import subr
 
 
-TERMINATING_MACRO_CHARS = '"\'()*,;`'
+TERMINATING_MACRO_CHARS = ' "\'()*,;`'
 NON_TERMINATING_MACRO_CHARS = '#'
 
 
@@ -22,6 +22,13 @@ def consume_space(chars: more_itertools.peekable) -> None:
         consume(chars)
 
 
+def consume_expect(chars: more_itertools.peekable, expected: str) -> None:
+    consume_space(chars)
+
+    if chars.peek(None) != expected:
+        raise ValueError(f'Expected {expected}')
+
+
 def read_double_quote(chars: more_itertools.peekable) -> types.Value:
     consume(chars)  # consume start "
     s = ''.join(subr.takewhile_inclusive(lambda c: c != '"', chars))
@@ -32,7 +39,7 @@ def read_double_quote(chars: more_itertools.peekable) -> types.Value:
 
 
 def read_single_quote(chars: more_itertools.peekable) -> types.Value:
-    consume(chars) # consume start '
+    consume(chars)  # consume start '
     v = read_ensure(chars)
 
     return types.ValueCons(
@@ -41,10 +48,39 @@ def read_single_quote(chars: more_itertools.peekable) -> types.Value:
     )
 
 
+def read_left_paren(chars: more_itertools.peekable) -> types.Value:
+    consume(chars)  # consume start (
+    consume_space(chars)
+
+    if chars.peek(None) == ')':
+        consume(chars)  # consume end )
+        return types.ValueSymbol(name='nil')
+
+    car = types.ValueCons(car=read_ensure(chars), cdr=types.ValueSymbol(name='nil'))
+    cur = car
+
+    while True:
+        consume_space(chars)
+
+        if chars.peek(None) == ')':
+            consume(chars)  # consume end )
+            break
+
+        if chars.peek(None) == '.':
+            cur.cdr = read_ensure(chars)
+            consume_expect(chars, ')')  # consume end )
+            break
+
+        cur.cdr = types.ValueCons(car=read_ensure(chars), cdr=types.ValueSymbol(name='nil'))
+        cur = cur.cdr
+
+    return car
+
+
 macro_handler: dict[str, Callable[[more_itertools.peekable], types.Value]] = {
     '"': read_double_quote,
     "'": read_single_quote,
-    '(': NotImplementedError(),
+    '(': read_left_paren,
     ')': NotImplementedError(),
     '*': NotImplementedError(),
     ',': NotImplementedError(),
@@ -56,6 +92,7 @@ macro_handler: dict[str, Callable[[more_itertools.peekable], types.Value]] = {
 
 def read_atom(chars: more_itertools.peekable) -> types.Value:
     s = ''.join(subr.takewhile_inclusive(lambda c: c not in TERMINATING_MACRO_CHARS, chars))
+    consume_space(chars)
 
     i, _ = subr.trap(lambda: int(s))
     if i is not None:
