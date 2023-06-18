@@ -1,2 +1,8 @@
+from . import rep
+
+
 def main():
-    print('hello world')
+    while True:
+        res = rep.rep(input('pily> '))
+        if res:
+            print(res)
