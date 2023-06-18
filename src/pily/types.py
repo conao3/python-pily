@@ -46,6 +46,10 @@ class ValueFloat(ValueAtom):
     value: float
 
 
+class ValueString(ValueAtom):
+    value: str
+
+
 ## Cache
 
 class Const(pydantic.BaseModel):

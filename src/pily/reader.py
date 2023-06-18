@@ -1,4 +1,5 @@
 from typing import Optional
+from collections.abc import Callable
 import more_itertools
 
 from . import types
@@ -7,6 +8,28 @@ from . import subr
 
 TERMINATING_MACRO_CHARS = '"\'()*,;`'
 NON_TERMINATING_MACRO_CHARS = '#'
+
+
+def read_double_quote(chars: more_itertools.peekable) -> types.Value:
+    next(chars)  # consume start "
+    s = ''.join(subr.takewhile_inclusive(lambda c: c != '"', chars))
+
+    next(chars)  # consume end "
+
+    return types.ValueString(value=s)
+
+
+macro_handler: dict[str, Callable[[more_itertools.peekable], types.Value]] = {
+    '"': read_double_quote,
+    "'": NotImplementedError(),
+    '(': NotImplementedError(),
+    ')': NotImplementedError(),
+    '*': NotImplementedError(),
+    ',': NotImplementedError(),
+    ';': NotImplementedError(),
+    '`': NotImplementedError(),
+    '#': NotImplementedError(),
+}
 
 
 class Reader:
@@ -44,11 +67,12 @@ class Reader:
         if peek is None:
             return None
 
-        if peek in TERMINATING_MACRO_CHARS:
-            raise NotImplementedError()
+        if peek in TERMINATING_MACRO_CHARS or peek in NON_TERMINATING_MACRO_CHARS:
+            handler = macro_handler.get(peek)
+            if not handler:
+                raise NotImplementedError()
 
-        if peek in NON_TERMINATING_MACRO_CHARS:
-            raise NotImplementedError()
+            return handler(self.chars)
 
         if peek == '\\':
             raise NotImplementedError()
