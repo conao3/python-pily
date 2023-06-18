@@ -38,6 +38,14 @@ class ValueSymbol(ValueAtom):
     name: str
 
 
+class ValueInteger(ValueAtom):
+    value: int
+
+
+class ValueFloat(ValueAtom):
+    value: float
+
+
 ## Cache
 
 class Const(pydantic.BaseModel):

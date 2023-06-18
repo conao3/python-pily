@@ -2,6 +2,8 @@ from typing import Optional
 import more_itertools
 
 from . import types
+from . import subr
+
 
 TERMINATING_MACRO_CHARS = '"\'()*,;`'
 NON_TERMINATING_MACRO_CHARS = '#'
@@ -22,7 +24,17 @@ class Reader:
             self.consume()
 
     def read_atom(self) -> types.Value:
-        return types.ValueSymbol(name=self.consume())
+        s = ''.join(subr.takewhile_inclusive(lambda c: c not in TERMINATING_MACRO_CHARS, self.chars))
+
+        i, _ = subr.trap(lambda: int(s))
+        if i is not None:
+            return types.ValueInteger(value=i)
+
+        f, _ = subr.trap(lambda: float(s))
+        if f is not None:
+            return types.ValueFloat(value=f)
+
+        return types.ValueSymbol(name=s)
 
     def read(self) -> Optional[types.Value]:
         self.consume_space()
