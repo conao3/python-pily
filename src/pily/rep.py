@@ -1,8 +1,13 @@
 from typing import Optional
 
+import more_itertools
+
+from . import reader
+
 
 def read(arg: str) -> str:
-    return arg
+    reader_ = reader.Reader(more_itertools.peekable(arg))
+    return str(reader_.read())
 
 
 def eval(arg: str) -> str:
