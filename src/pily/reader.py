@@ -3,6 +3,9 @@ import more_itertools
 
 from . import types
 
+TERMINATING_MACRO_CHARS = '"\'()*,;`'
+NON_TERMINATING_MACRO_CHARS = '#'
+
 
 class Reader:
     def __init__(self, chars: more_itertools.peekable):
@@ -28,5 +31,17 @@ class Reader:
 
         if peek is None:
             return None
+
+        if peek in TERMINATING_MACRO_CHARS:
+            raise NotImplementedError()
+
+        if peek in NON_TERMINATING_MACRO_CHARS:
+            raise NotImplementedError()
+
+        if peek == '\\':
+            raise NotImplementedError()
+
+        if peek == '|':
+            raise NotImplementedError()
 
         return self.read_atom()
