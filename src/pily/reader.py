@@ -77,11 +77,22 @@ def read_left_paren(chars: more_itertools.peekable) -> types.Value:
     return car
 
 
+def read_right_paren(chars: more_itertools.peekable) -> types.Value:
+    consume(chars)  # consume )
+    raise types.ReaderError('unexpected )')
+
+
+def read_semicolon(chars: more_itertools.peekable) -> types.Value:
+    subr.takewhile_inclusive(lambda c: c != '\n', chars)  # type: ignore
+    consume(chars)  # consume \n
+    
+
+
 macro_handler: dict[str, Callable[[more_itertools.peekable], types.Value]] = {
     '"': read_double_quote,
     "'": read_single_quote,
     '(': read_left_paren,
-    ')': NotImplementedError(),
+    ')': read_right_paren,
     '*': NotImplementedError(),
     ',': NotImplementedError(),
     ';': NotImplementedError(),
