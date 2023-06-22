@@ -40,7 +40,7 @@ def read_double_quote(chars: more_itertools.peekable) -> types.Value:
 
 def read_single_quote(chars: more_itertools.peekable) -> types.Value:
     consume(chars)  # consume start '
-    v = read_ensure(chars)
+    v = read(chars, recursive_p=True)
 
     return types.ValueCons(
         car=types.ValueSymbol(name='quote'),
@@ -56,7 +56,7 @@ def read_left_paren(chars: more_itertools.peekable) -> types.Value:
         consume(chars)  # consume end )
         return types.ValueSymbol(name='nil')
 
-    car = types.ValueCons(car=read_ensure(chars), cdr=types.ValueSymbol(name='nil'))
+    car = types.ValueCons(car=read(chars, recursive_p=True), cdr=types.ValueSymbol(name='nil'))
     cur = car
 
     while True:
@@ -67,11 +67,11 @@ def read_left_paren(chars: more_itertools.peekable) -> types.Value:
             break
 
         if chars.peek(None) == '.':
-            cur.cdr = read_ensure(chars)
+            cur.cdr = read(chars, recursive_p=True)
             consume_expect(chars, ')')  # consume end )
             break
 
-        cur.cdr = types.ValueCons(car=read_ensure(chars), cdr=types.ValueSymbol(name='nil'))
+        cur.cdr = types.ValueCons(car=read(chars, recursive_p=True), cdr=types.ValueSymbol(name='nil'))
         cur = cur.cdr
 
     return car
@@ -85,7 +85,6 @@ def read_right_paren(chars: more_itertools.peekable) -> types.Value:
 def read_semicolon(chars: more_itertools.peekable) -> types.Value:
     subr.takewhile_inclusive(lambda c: c != '\n', chars)  # type: ignore
     consume(chars)  # consume \n
-    
 
 
 macro_handler: dict[str, Callable[[more_itertools.peekable], types.Value]] = {
@@ -116,25 +115,20 @@ def read_atom(chars: more_itertools.peekable) -> types.Value:
     return types.ValueSymbol(name=s)
 
 
-def read_ensure(chars: more_itertools.peekable, type_: type[types.Value] = types.Value) -> types.Value:
-    v = read(chars)
-
-    if v is None:
-        raise types.ReaderError('unexpected EOF')
-
-    if not isinstance(v, type_):
-        raise types.ReaderError(f'expected {type_.__name__}, got {v}')
-
-    return v
-
-
-def read(chars: more_itertools.peekable) -> Optional[types.Value]:
+def read(
+    chars: more_itertools.peekable,
+    eof_error_p: bool = True,
+    eof_value: types.Value = types.ValueSymbol(name='nil'),
+    recursive_p: bool = False,
+) -> types.Value:
     consume_space(chars)
 
     peek: Optional[str] = chars.peek(None)
 
     if peek is None:
-        return None
+        if eof_error_p:
+            raise types.ReaderError('unexpected EOF')
+        return eof_value
 
     if peek in TERMINATING_MACRO_CHARS or peek in NON_TERMINATING_MACRO_CHARS:
         handler = macro_handler.get(peek)

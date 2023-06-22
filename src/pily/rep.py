@@ -8,7 +8,12 @@ from . import reader
 
 def read(arg: str) -> Optional[types.Value]:
     chars = more_itertools.peekable(arg)
-    return reader.read(chars)
+    res = reader.read(chars, eof_error_p=False)
+
+    if isinstance(res, types.ValueSymbol) and res.name == 'nil':
+        return None
+
+    return res
 
 
 def eval(arg: Optional[types.Value]) -> Optional[types.Value]:
