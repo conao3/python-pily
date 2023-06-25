@@ -46,6 +46,14 @@ class ValueString(ValueAtom):
     value: str
 
 
+class ValueChar(ValueAtom):
+    value: str
+
+
+class ValueMultiple(ValueAtom):
+    values: list[Value]
+
+
 ## Cache
 
 class Const(pydantic.BaseModel):

@@ -83,8 +83,12 @@ def read_right_paren(chars: more_itertools.peekable) -> types.Value:
 
 
 def read_semicolon(chars: more_itertools.peekable) -> types.Value:
-    subr.takewhile_inclusive(lambda c: c != '\n', chars)  # type: ignore
-    consume(chars)  # consume \n
+    while True:
+        res = read_char(chars, eof_error_p=False, eof_value=types.ValueChar(value='\n'))
+        if isinstance(res, types.ValueChar) and res.value == '\n':
+            break
+
+    return types.ValueMultiple(values=[])
 
 
 macro_handler: dict[str, Callable[[more_itertools.peekable], types.Value]] = {
@@ -94,7 +98,7 @@ macro_handler: dict[str, Callable[[more_itertools.peekable], types.Value]] = {
     ')': read_right_paren,
     '*': NotImplementedError(),
     ',': NotImplementedError(),
-    ';': NotImplementedError(),
+    ';': read_semicolon,
     '`': NotImplementedError(),
     '#': NotImplementedError(),
 }
@@ -113,6 +117,22 @@ def read_atom(chars: more_itertools.peekable) -> types.Value:
         return types.ValueFloat(value=f)
 
     return types.ValueSymbol(name=s)
+
+
+def read_char(
+    chars: more_itertools.peekable,
+    eof_error_p: bool = True,
+    eof_value: types.Value = types.ValueSymbol(name='nil'),
+    recursive_p: bool = False,
+) -> types.Value:
+    peek: Optional[str] = chars.peek(None)
+
+    if peek is None:
+        if eof_error_p:
+            raise types.ReaderError('unexpected EOF')
+        return eof_value
+
+    return types.ValueChar(value=consume(chars))
 
 
 def read(
