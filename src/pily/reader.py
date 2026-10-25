@@ -91,7 +91,9 @@ def read_semicolon(chars: more_itertools.peekable) -> types.Value:
     return types.ValueMultiple(values=[])
 
 
-macro_handler: dict[str, Callable[[more_itertools.peekable], types.Value]] = {
+macro_handler: dict[
+    str, Callable[[more_itertools.peekable], types.Value] | NotImplementedError
+] = {
     '"': read_double_quote,
     "'": read_single_quote,
     '(': read_left_paren,
@@ -152,8 +154,10 @@ def read(
 
     if peek in TERMINATING_MACRO_CHARS or peek in NON_TERMINATING_MACRO_CHARS:
         handler = macro_handler.get(peek)
-        if not handler:
+        if handler is None:
             raise NotImplementedError()
+        if isinstance(handler, NotImplementedError):
+            raise handler
 
         return handler(chars)
 
